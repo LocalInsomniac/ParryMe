@@ -1,0 +1,157 @@
+version "4.10"
+
+class ParryMe : EventHandler {
+	override void PlayerEntered(PlayerEvent e) {
+		let pmo = players[e.playerNumber].mo;
+		
+		if (pmo && !pmo.CountInv("ParryMe_System")) {
+			pmo.GiveInventory("ParryMe_System", 1);
+		}
+	}
+	
+	override void RenderOverlay(RenderEvent e) {
+		let pmo = e.camera;
+		
+		if (pmo && pmo.CountInv("ParryMe_System")) {
+			ParryMe_System parry = ParryMe_System(pmo.FindInventory("ParryMe_System"));
+			
+			if (parry && parry.parryComboTime) {
+				int combo = parry.parryCombo;
+				
+				if (combo > 1) {
+					string header = "Combo!";
+					string comboText = "x"..combo;
+					
+					Screen.DrawText(smallFont, Font.CR_White, 160 - (smallFont.StringWidth(header) * 0.5), 110, header, DTA_320x200, true);
+					Screen.DrawText(bigFont, Font.CR_Red, 160 - (bigFont.StringWidth(comboText) * 0.5), 118, comboText, DTA_320x200, true);
+				}
+			}
+		}
+	}
+}
+
+class ParryMe_System : Inventory {
+	int parryTime, parryFreezeTime, parryCombo, parryComboTime;
+	
+	Default {
+		Inventory.MaxAmount 1;
+		
+		+Inventory.Undroppable
+		+Inventory.Untossable
+		+Inventory.AutoActivate
+	}
+	
+	States {
+		Use:
+			TNT1 A 0;
+			Fail;
+		
+		Pickup:
+			TNT1 A 0 {
+				return true;
+			}
+			
+			Stop;
+	}
+	
+	override void Tick() {
+		if (!owner) {
+			DepleteOrDestroy();
+			
+			return;
+		}
+		
+		if (parryTime <= 0 && owner.GetPlayerInput(Input_Buttons) & BT_Forward
+			&& !(owner.GetPlayerInput(Input_OldButtons) & BT_Forward)) {
+			parryTime = sv_parryMe_time;
+		}
+		
+		if (parryFreezeTime) {
+			--parryFreezeTime;
+			
+			if (parryFreezeTime <= 0) {
+				level.SetFrozen(false);
+			}
+		} else {
+			if (parryTime) {
+				--parryTime;
+			}
+			
+			if (parryComboTime) {
+				--parryComboTime;
+				
+				if (parryComboTime <= 0) {
+					parryCombo = 0;
+				}
+			}
+		}
+		
+		super.Tick();
+	}
+	
+	override void ModifyDamage(int damage, Name damageType, out int newDamage,
+							   bool passive, Actor inflictor, Actor source,
+							   int flags) {
+		if (passive && parryTime && owner && inflictor && inflictor != owner && source != owner) {
+			newDamage = 0;
+			++parryCombo;
+			parryComboTime = 70;
+			
+			Vector3 oPos = owner.pos + (0, 0, owner.height * 0.5);
+			Vector3 iPos = inflictor.pos + (0, 0, inflictor.height * 0.5);
+			
+			owner.Spawn("ParryMe_Effect", oPos + (0.5 * (iPos - oPos)));
+			owner.A_Quake(1, 5, 0, owner.radius, "");
+			
+			if (!multiplayer) {
+				parryFreezeTime = 5;
+				level.SetFrozen(true);
+			}
+			
+			if (parryCombo > 1) {
+				Sound snd;
+				
+				if (parryCombo >= 10) {
+					snd = "ParryMe/combo4";
+				} else {
+					if (parryCombo >= 7) {
+						snd = "ParryMe/combo3";
+					} else {
+						if (parryCombo >= 4) {
+							snd = "ParryMe/combo2";
+						} else {
+							snd = "ParryMe/combo1";
+						}
+					}
+				}
+				
+				owner.A_StartSound(snd, Chan_7, ChanF_UI | ChanF_NoPause | ChanF_Overlap | ChanF_Local);
+			}
+		}
+	}
+}
+
+class ParryMe_Effect : Actor {
+	Default {
+		Scale 0.625;
+		SeeSound "ParryMe/parry";
+		RenderStyle "Add";
+		
+		+ForceXYBillboard
+		+NotOnAutomap
+		+NoInteraction
+		+ZDoomTrans
+	}
+	
+	States {
+		Spawn:
+			PMFX ABCDEFGHI 2 Bright;
+			Stop;
+	}
+	
+	override void PostBeginPlay() {
+		super.PostBeginPlay();
+		
+		A_StartSound(seeSound);
+	}
+}

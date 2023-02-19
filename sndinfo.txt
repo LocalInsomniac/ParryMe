@@ -1,0 +1,5 @@
+ParryMe/parry PM_PARRY
+ParryMe/combo1 PM_COMB1
+ParryMe/combo2 PM_COMB2
+ParryMe/combo3 PM_COMB3
+ParryMe/combo4 PM_COMB4
