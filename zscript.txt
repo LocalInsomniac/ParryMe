@@ -137,6 +137,13 @@ class ParryMe_System : Inventory {
 					
 					owner.A_StartSound(snd, Chan_7, ChanF_UI | ChanF_NoPause | ChanF_Overlap | ChanF_Local);
 				}
+				
+				if (sv_parryMe_pain
+					&& source.InStateSequence(source.curState, source.ResolveState("Melee"))
+					&& source.FindState("Pain")) {
+						source.SetStateLabel("Pain");
+					}
+				}
 			}
 			
 			return;

@@ -1,2 +1,3 @@
 server int sv_parryMe_time = 4;
 server int sv_parryMe_failTime = 6;
+server bool sv_parryMe_pain = true;
