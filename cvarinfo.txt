@@ -1,2 +1,2 @@
 server int sv_parryMe_time = 4;
-server int sv_parryMe_failTime = 4;
+server int sv_parryMe_failTime = 6;
