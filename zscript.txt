@@ -139,10 +139,10 @@ class ParryMe_System : Inventory {
 				}
 				
 				if (sv_parryMe_pain
+					&& source.target == owner && source.CheckMeleeRange()
 					&& source.InStateSequence(source.curState, source.ResolveState("Melee"))
 					&& source.FindState("Pain")) {
-						source.SetStateLabel("Pain");
-					}
+					source.SetStateLabel("Pain");
 				}
 			}
 			
