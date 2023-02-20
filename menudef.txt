@@ -1,3 +1,9 @@
+OptionMenu "ParryMe_Options" {
+	Title "ParryMe Options"
+    Slider "Parry Time Window", "sv_parryMe_time", 3, 8, 1
+	Slider "Fail Time Window", "sv_parryMe_failTime", 0, 8, 1
+}
+
 AddOptionMenu "OptionsMenu" {
-    Slider "ParryMe Time Window", "sv_parryMe_time", 3, 8, 1
+    Submenu "ParryMe Options", "ParryMe_Options"
 }

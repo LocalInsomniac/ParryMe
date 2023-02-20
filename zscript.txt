@@ -31,7 +31,7 @@ class ParryMe : EventHandler {
 }
 
 class ParryMe_System : Inventory {
-	int parryTime, parryFreezeTime, parryCombo, parryComboTime;
+	int parryTime, parryFreezeTime, parryCombo, parryComboTime, noParryTime;
 	
 	Default {
 		Inventory.MaxAmount 1;
@@ -61,9 +61,14 @@ class ParryMe_System : Inventory {
 			return;
 		}
 		
-		if (parryTime <= 0 && owner.GetPlayerInput(Input_Buttons) & BT_Forward
-			&& !(owner.GetPlayerInput(Input_OldButtons) & BT_Forward)) {
-			parryTime = sv_parryMe_time;
+		if (noParryTime) {
+			--noParryTime;
+		} else {
+			if (parryTime <= 0
+				&& owner.GetPlayerInput(Input_Buttons) & BT_Forward
+				&& !(owner.GetPlayerInput(Input_OldButtons) & BT_Forward)) {
+				parryTime = sv_parryMe_time;
+			}
 		}
 		
 		if (parryFreezeTime) {
@@ -92,6 +97,10 @@ class ParryMe_System : Inventory {
 	override void ModifyDamage(int damage, Name damageType, out int newDamage,
 							   bool passive, Actor inflictor, Actor source,
 							   int flags) {
+		if (noParryTime) {
+			return;
+		}
+		
 		if (passive && parryTime && owner && inflictor && inflictor != owner && source != owner) {
 			newDamage = 0;
 			++parryCombo;
@@ -127,7 +136,11 @@ class ParryMe_System : Inventory {
 				
 				owner.A_StartSound(snd, Chan_7, ChanF_UI | ChanF_NoPause | ChanF_Overlap | ChanF_Local);
 			}
+			
+			return;
 		}
+		
+		noParryTime = sv_parryMe_failTime;
 	}
 }
 
