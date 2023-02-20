@@ -97,44 +97,46 @@ class ParryMe_System : Inventory {
 	override void ModifyDamage(int damage, Name damageType, out int newDamage,
 							   bool passive, Actor inflictor, Actor source,
 							   int flags) {
-		if (noParryTime) {
+		if (!passive || noParryTime) {
 			return;
 		}
 		
-		if (passive && parryTime && owner && inflictor && inflictor != owner && source != owner) {
-			newDamage = 0;
-			++parryCombo;
-			parryComboTime = 70;
-			
-			Vector3 oPos = owner.pos + (0, 0, owner.height * 0.5);
-			Vector3 iPos = inflictor.pos + (0, 0, inflictor.height * 0.5);
-			
-			owner.Spawn("ParryMe_Effect", oPos + (0.5 * (iPos - oPos)));
-			owner.A_Quake(1, 5, 0, owner.radius, "");
-			
-			if (!multiplayer) {
-				parryFreezeTime = 5;
-				level.SetFrozen(true);
-			}
-			
-			if (parryCombo > 1) {
-				Sound snd;
+		if (parryTime && owner && inflictor) {
+			if (inflictor != owner && source != owner) {
+				newDamage = 0;
+				++parryCombo;
+				parryComboTime = 70;
 				
-				if (parryCombo >= 10) {
-					snd = "ParryMe/combo4";
-				} else {
-					if (parryCombo >= 7) {
-						snd = "ParryMe/combo3";
-					} else {
-						if (parryCombo >= 4) {
-							snd = "ParryMe/combo2";
-						} else {
-							snd = "ParryMe/combo1";
-						}
-					}
+				Vector3 oPos = owner.pos + (0, 0, owner.height * 0.5);
+				Vector3 iPos = inflictor.pos + (0, 0, inflictor.height * 0.5);
+				
+				owner.Spawn("ParryMe_Effect", oPos + (0.5 * (iPos - oPos)));
+				owner.A_Quake(1, 5, 0, owner.radius, "");
+				
+				if (!multiplayer) {
+					parryFreezeTime = 5;
+					level.SetFrozen(true);
 				}
 				
-				owner.A_StartSound(snd, Chan_7, ChanF_UI | ChanF_NoPause | ChanF_Overlap | ChanF_Local);
+				if (parryCombo > 1) {
+					Sound snd;
+					
+					if (parryCombo >= 10) {
+						snd = "ParryMe/combo4";
+					} else {
+						if (parryCombo >= 7) {
+							snd = "ParryMe/combo3";
+						} else {
+							if (parryCombo >= 4) {
+								snd = "ParryMe/combo2";
+							} else {
+								snd = "ParryMe/combo1";
+							}
+						}
+					}
+					
+					owner.A_StartSound(snd, Chan_7, ChanF_UI | ChanF_NoPause | ChanF_Overlap | ChanF_Local);
+				}
 			}
 			
 			return;
