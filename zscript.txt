@@ -104,6 +104,7 @@ class ParryMe_System : Inventory {
 		if (parryTime && owner && inflictor) {
 			if (inflictor != owner && source != owner) {
 				newDamage = 0;
+				parryTime = 0;
 				++parryCombo;
 				parryComboTime = 70;
 				
